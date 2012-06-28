@@ -162,6 +162,13 @@ class GenericTaggedItemBase(ItemBase):
             "%s__content_type" % cls.tag_relname(): ct
         }
         if instance is not None:
+            try:
+                # Return any prefetched objects if there are any
+                relname = models.options.get_verbose_name(cls.__name__).replace(' ', '_') + 's'
+                objects = instance._prefetched_objects_cache[relname]
+                return list(set([getattr(obj, cls.tag.cache_name) for obj in objects]))
+            except:
+                pass
             kwargs["%s__object_id" % cls.tag_relname()] = instance.pk
         return cls.tag_model().objects.filter(**kwargs).distinct()
 
