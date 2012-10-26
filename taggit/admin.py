@@ -33,7 +33,7 @@ class TagFilter(admin.SimpleListFilter):
     if value is None:
       return queryset
     else:
-      return queryset.filter(tags__slug=str(value))
+      return queryset.filter(tags__slug=unicode(value))
 
 
 class NamespaceFilter(admin.SimpleListFilter):
@@ -54,7 +54,7 @@ class NamespaceFilter(admin.SimpleListFilter):
     if value is None:
       return queryset
     else:
-      return queryset.filter(namespace=str(value))
+      return queryset.filter(namespace=unicode(value))
 
 
 def tagged_items_count(obj):
