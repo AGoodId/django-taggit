@@ -52,7 +52,7 @@ msgstr "Kortnamn för URL"
 
 #: models.py:96
 msgid "namespace"
-msgstr "namnrymd"
+msgstr "familj"
 
 #: models.py:107
 msgid "Tag"
