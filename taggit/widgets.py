@@ -8,6 +8,15 @@ from django.utils.translation import ugettext_lazy as _, ugettext
 
 from utils import edit_string_for_tags
 
+
+class TagNameWidget(forms.TextInput):
+
+    def render(self, name, value, attrs=None):
+        if value and ':' in value:
+            value = value.split(':', 1)[1]
+        return super(TagNameWidget, self).render(name, value, attrs=attrs)
+
+
 class TagAutocomplete(forms.TextInput):
     input_type = 'text'
     

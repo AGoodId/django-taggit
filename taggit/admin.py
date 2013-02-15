@@ -10,6 +10,7 @@ from begood_sites.models import VersionSite
 import reversion
 
 from taggit.models import Tag, TaggedItem
+from taggit.widgets import TagNameWidget
 
 
 class TagFilter(admin.SimpleListFilter):
@@ -46,7 +47,7 @@ class NamespaceFilter(admin.SimpleListFilter):
     """
     qs = model_admin.queryset(request)
     namespaces = qs.values_list('namespace', flat=True).order_by('namespace').distinct()
-    lookups = [(ns, ns) for ns in namespaces]
+    lookups = [(ns, ns if ns else _('None')) for ns in namespaces]
     return lookups
 
   def queryset(self, request, queryset):
@@ -80,14 +81,21 @@ def tagged_items_count(obj):
 tagged_items_count.short_description = _('Tagged Items Count')
 
 
+def tag_name(obj):
+    return unicode(obj)
+tag_name.short_description = _('Tag')
+
+
 class TaggedItemInline(admin.StackedInline):
     model = TaggedItem
 
 
 class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
-    list_display = ["name", tagged_items_count,]
+    list_display = ["namespace", tag_name, tagged_items_count,]
     list_filter = [NamespaceFilter]
     search_fields = ["name",]
+    fields = ['name', 'namespace', 'slug', 'sites']
+    list_display_links = [tag_name]
     prepopulated_fields = {'slug': ('name',)}
     list_per_page = 50
     change_form_template = 'admin/reversion_change_form.html'
@@ -103,6 +111,12 @@ class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
 
     def get_site_queryset(self, obj, user):
         return user.get_sites()
+
+    def formfield_for_dbfield(self, field, **kwargs):
+        # For the name field, use a widget that strips the namespace
+        if field.name == 'name':
+            kwargs['widget'] = TagNameWidget()
+        return super(TagAdmin, self).formfield_for_dbfield(field, **kwargs)
 
     def delete_model(self, request, obj):
         """
@@ -124,6 +138,11 @@ class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
         Given a model instance save it to the database.
         """
         obj = form.instance
+
+        # Add the namespace to the name
+        if obj.namespace and not ':' in obj.name:
+            obj.name = obj.namespace + ':' + obj.name
+
         if obj.pk:
             try:
                 original = Tag.objects.get(pk=obj.pk)
