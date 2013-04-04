@@ -52,7 +52,11 @@ class BaseTaggingTest(object):
         return form_str
 
     def assert_form_renders(self, form, html):
-        self.assertEqual(str(form), self._get_form_str(html))
+        try:
+            self.assertHTMLEqual(str(form), self._get_form_str(html))
+        except AttributeError:
+            self.assertEqual(str(form), self._get_form_str(html))
+
 
 class BaseTaggingTestCase(TestCase, BaseTaggingTest):
     pass
@@ -225,8 +229,8 @@ class TaggableManagerTestCase(BaseTaggingTestCase):
         guava = self.food_model.objects.create(name="guava")
 
         self.assertEqual(
-            map(lambda o: o.pk, self.food_model.objects.exclude(tags__name__in=["red"])),
-            [pear.pk, guava.pk],
+            sorted(map(lambda o: o.pk, self.food_model.objects.exclude(tags__name__in=["red"]))),
+            sorted([pear.pk, guava.pk]),
         )
 
     def test_similarity_by_tag(self):
@@ -286,6 +290,13 @@ class TaggableManagerTestCase(BaseTaggingTestCase):
             m.tags.all(),
             ["hd"],
         )
+
+    def test_field_api(self):
+        # Check if tag field, which simulates m2m, has django-like api.
+        field = self.food_model._meta.get_field('tags')
+        self.assertTrue(hasattr(field, 'rel'))
+        self.assertTrue(hasattr(field, 'related'))
+        self.assertEqual(self.food_model, field.related.model)
 
 
 class TaggableManagerDirectTestCase(TaggableManagerTestCase):

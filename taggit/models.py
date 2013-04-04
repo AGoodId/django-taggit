@@ -11,7 +11,7 @@ from begood_sites.fields import MultiSiteField
 
 
 class TagBase(models.Model):
-    name = models.CharField(verbose_name=_('Name'), max_length=100)
+    name = models.CharField(verbose_name=_('Name'), unique=True, max_length=100)
     slug = models.SlugField(verbose_name=_('Slug'), unique=True, max_length=100)
     sites = MultiSiteField()
 
