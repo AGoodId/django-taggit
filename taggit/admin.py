@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
+from begood.contrib.admin.widgets import TextAutocomplete
 from begood_sites.admin import SiteModelAdmin, SiteVersionAdmin
 from begood_sites.models import VersionSite
 import reversion
@@ -116,6 +117,12 @@ class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
         # For the name field, use a widget that strips the namespace
         if field.name == 'name':
             kwargs['widget'] = TagNameWidget()
+        # For the namespace field, use an autocomplete widget
+        if field.name == 'namespace':
+            choices = Tag.on_site.exclude(namespace='')\
+                .values_list('namespace', flat=True)\
+                .order_by('namespace').distinct()
+            kwargs['widget'] = TextAutocomplete(choices=choices)
         return super(TagAdmin, self).formfield_for_dbfield(field, **kwargs)
 
     def delete_model(self, request, obj):
