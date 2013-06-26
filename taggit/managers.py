@@ -156,8 +156,7 @@ class _TaggableManager(models.Manager):
     def _lookup_kwargs(self):
         return self.through.lookup_kwargs(self.instance)
 
-    @require_instance_manager
-    def add(self, *tags):
+    def _get_tag_objs(self, *tags):
         str_tags = set([
             t
             for t in tags
@@ -174,6 +173,12 @@ class _TaggableManager(models.Manager):
         for new_tag in str_tags - set(t.name for t in existing):
             tag_objs.add(self.through.tag_model().objects.create(name=new_tag))
 
+        return tag_objs
+
+    @require_instance_manager
+    def add(self, *tags):
+        tag_objs = self._get_tag_objs(*tags)
+
         for tag in tag_objs:
             self.through.objects.get_or_create(tag=tag, **self._lookup_kwargs())
             # Add any sites from this object to the tags
@@ -185,8 +190,10 @@ class _TaggableManager(models.Manager):
 
     @require_instance_manager
     def set(self, *tags):
-        self.clear()
-        self.add(*tags)
+        tag_objs = self._get_tag_objs(*tags)
+        tag_ids = [t.id for t in tag_objs]
+        self.through.objects.filter(**self._lookup_kwargs()).exclude(tag__id__in=tag_ids).delete()
+        self.add(*tag_objs)
 
     @require_instance_manager
     def remove(self, *tags):
