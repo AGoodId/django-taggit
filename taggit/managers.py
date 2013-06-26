@@ -179,7 +179,13 @@ class _TaggableManager(models.Manager):
     def add(self, *tags):
         tag_objs = self._get_tag_objs(*tags)
 
-        for tag in tag_objs:
+        # Only add tags that don't exist to speed up the case where the tags
+        # haven't changed.
+        existing = self.through.objects.filter(tag__in=tag_objs, **self._lookup_kwargs())
+        existing = [t.tag for t in existing]
+        new = [t for t in tag_objs if t not in existing]
+
+        for tag in new:
             self.through.objects.get_or_create(tag=tag, **self._lookup_kwargs())
             # Add any sites from this object to the tags
             if hasattr(self.instance, 'sites'):
@@ -191,8 +197,7 @@ class _TaggableManager(models.Manager):
     @require_instance_manager
     def set(self, *tags):
         tag_objs = self._get_tag_objs(*tags)
-        tag_ids = [t.id for t in tag_objs]
-        self.through.objects.filter(**self._lookup_kwargs()).exclude(tag__id__in=tag_ids).delete()
+        self.through.objects.filter(**self._lookup_kwargs()).exclude(tag__in=tag_objs).delete()
         self.add(*tag_objs)
 
     @require_instance_manager
