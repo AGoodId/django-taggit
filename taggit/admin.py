@@ -99,6 +99,7 @@ class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
     list_display_links = [tag_name]
     prepopulated_fields = {'slug': ('name',)}
     list_per_page = 50
+    list_max_show_all = 10000
     change_form_template = 'admin/reversion_change_form.html'
     change_list_template = 'admin/change_list.html'
 
@@ -109,6 +110,14 @@ class TagAdmin(SiteVersionAdmin, SiteModelAdmin):
         for tag in queryset:
             modeladmin.delete_model(request, tag)
     delete_selected.short_description = _("Delete selected Tags")
+
+    def get_list_display(self, request):
+        list_display = self.list_display
+
+        if 'all' in request.GET:
+          return list_display[:2]
+        else:
+          return list_display
 
     def get_site_queryset(self, obj, user):
         return user.get_sites()
