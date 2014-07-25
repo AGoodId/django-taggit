@@ -1,7 +1,7 @@
+from __future__ import unicode_literals
+
 import reversion
 import django
-
-from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 try:
