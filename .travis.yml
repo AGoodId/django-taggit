@@ -1,19 +1,18 @@
 language: python
-
-python:
-  - "2.6"
-  - "2.7"
-
 env:
-  - DJANGO=django==1.5 --use-mirrors
-  - DJANGO=django==1.4.5 --use-mirrors
-  - DJANGO=django==1.3.7 --use-mirrors
-
+  - TOXENV=py27-1.7.x
+  - TOXENV=py33-1.5.x
+  - TOXENV=py27-1.6.x
+  - TOXENV=py33-1.6.x
+  - TOXENV=py26-1.6.x
+  - TOXENV=py27-1.5.x
+  - TOXENV=py27-1.4.x
+  - TOXENV=py33-1.7.x
+  - TOXENV=py26-1.4.x
+  - TOXENV=py26-1.5.x
 install:
-  - pip install $DJANGO
-
+  - pip install tox
 script:
-  - python setup.py test
-
+  - tox
 notifications:
   email: false
