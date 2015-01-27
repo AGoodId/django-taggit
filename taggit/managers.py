@@ -181,7 +181,7 @@ class _TaggableManager(models.Manager):
 
         # Only add tags that don't exist to speed up the case where the tags
         # haven't changed.
-        existing = self.through.objects.filter(tag__in=tag_objs, **self._lookup_kwargs())
+        existing = self.through.objects.filter(tag__in=tag_objs, **self._lookup_kwargs()).select_related('tag')
         existing = [t.tag for t in existing]
         new = [t for t in tag_objs if t not in existing]
 
